@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FunOlympics Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        body {
+            background-color: #192841;
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            text-align: center;
+            color: #83aff0;
+            font-size: 48px;
+        }
+        .dropdown {
+            margin: 20px;
+            background-color: #6FC0DB;
+            color: black;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #graphs-container {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>FunOlympics Dashboard</h1>
+    <div class="dropdown">
+        <label for="sporting-dropdown">Select Sport: </label>
+        <select id="sporting-dropdown">
+            <!-- Options will be populated by JavaScript -->
+        </select>
+    </div>
+    <div id="scatter-plot" style="height: 70vh;"></div>
+
+    <script>
+        // Load and parse the CSV file
+        Papa.parse('FunOlympics.csv', {
+            download: true,
+            header: true,
+            complete: function(results) {
+                const data = results.data;
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    const sportsDropdown = document.getElementById('sporting-dropdown');
+                    const scatterPlotDiv = document.getElementById('scatter-plot');
+
+                    // Extract unique sports
+                    const uniqueSports = [...new Set(data.map(item => item.Sports))];
+
+                    // Populate the dropdown with unique sports
+                    uniqueSports.forEach(sport => {
+                        const option = document.createElement('option');
+                        option.value = sport;
+                        option.text = sport.charAt(0).toUpperCase() + sport.slice(1);
+                        sportsDropdown.appendChild(option);
+                    });
+
+                    // Function to generate scatter plot
+                    function generateScatterPlot(selectedSport) {
+                        const filteredData = data.filter(item => item.Sports === selectedSport);
+                        const trace = {
+                            x: filteredData.map(item => item.Country),
+                            y: filteredData.map(item => item.Views),
+                            mode: 'markers',
+                            type: 'scatter',
+                            marker: { color: '#00BFFF' },
+                            text: filteredData.map(item => item.Country)
+                        };
+
+                        const layout = {
+                            title: `Viewership for ${selectedSport} in Every Country`,
+                            plot_bgcolor: '#192841',
+                            paper_bgcolor: '#192841',
+                            font: { color: '#FFFFFF' }
+                        };
+
+                        Plotly.newPlot(scatterPlotDiv, [trace], layout);
+                    }
+
+                    // Initial plot
+                    generateScatterPlot(sportsDropdown.value || uniqueSports[0]);
+
+                    // Update plot on dropdown change
+                    sportsDropdown.addEventListener('change', function () {
+                        generateScatterPlot(this.value);
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
